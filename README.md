@@ -10,7 +10,7 @@ The project uses the **Steam Games Dataset** by FronkonGames, available on Huggi
 
 ## Group Members
 
-- [Your full name] (individual project)
+- Anas Abdulla (individual project)
 
 ## Dataset Preparation
 
