@@ -66,25 +66,18 @@ Some dataset values, such as current game price and platform support, may repres
 
 ## Project Structure
 
-```text
-steam-game-prediction/
-├── README.md
-├── requirements.txt
-├── .gitignore
-├── data/
-└── notebooks/
-    ├── 00_prepare_data.ipynb
-    └── 01_features_abdullan.ipynb
-```
+- `notebooks/00_prepare_data.ipynb` - Data preparation and creation of the target variable.
+- `notebooks/01_features_abdullan.ipynb` - M1: Feature selection and baseline model.
+- `notebooks/02_know_the_data.ipynb` - M2: Data exploration, quality checks, and feature suitability.
 
 The dataset files are not included in the GitHub repository.
 
 ## How to Run
 
-1. Clone the repository.
-2. Install the required Python packages using `requirements.txt`.
-3. Make sure the dataset is available in the `data/` folder.
-4. Open and run `00_prepare_data.ipynb`.
-5. Open and run `01_features_abdullan.ipynb`.
+Run the notebooks in the following order:
 
-The notebooks should be run in order.
+1. `00_prepare_data.ipynb` - Prepare the dataset and create the training, validation, and test splits.
+2. `01_features_abdullan.ipynb` - Train and evaluate the baseline model (M1).
+3. `02_know_the_data.ipynb` - Explore the dataset, investigate data quality, and evaluate feature suitability (M2).
+
+Make sure the required dataset files are available in the `data/` folder before running the notebooks.
