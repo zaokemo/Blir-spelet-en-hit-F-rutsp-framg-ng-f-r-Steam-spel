@@ -101,6 +101,11 @@ The dataset files are not included in this repository. They should be placed in 
 3. Obtain the Steam Games Dataset and run `notebooks/00_prepare_data.ipynb` to prepare the data.
 4. Make sure the prepared training, validation and test files are available in the `data/` folder.
 5. Run the milestone notebooks in order, using the same prepared data split.
+6.The original dataset file should be placed at:
+
+- `data/train-00000-of-00001.parquet`
+
+Run `notebooks/00_prepare_data.ipynb` first to generate the prepared training, validation and test Parquet files.
 
 The M5 notebook expects the prepared Parquet files at:
 
