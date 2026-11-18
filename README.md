@@ -38,11 +38,15 @@ The first milestone established a baseline and tested individual features and co
 
 The dataset was explored to understand its structure, feature types, missing values and possible data-quality issues. This work also helped identify which columns could be suitable for prediction before release.
 
-### M3 and M4 - Model Development and Evaluation
+### M3 - Regression and Model Development
 
-The modelling work developed a Logistic Regression baseline using pre-release features, including price, platform support, required age and counts of categories and genres.
+M3 focused on developing and evaluating regression models using pre-release game information. Different features and model configurations were tested to understand how well the available information could predict game success.
 
-The M4 model was evaluated using the existing training, validation and test sets. A recommendation threshold was selected using validation data to reflect a review capacity of approximately 10%.
+### M4 - Classification Models and Evaluation
+
+M4 focused on predicting whether a Steam game would become a hit using classification models. Logistic Regression was evaluated using the existing training, validation and test sets.
+
+A recommendation threshold was selected using validation data to reflect a review capacity of approximately 10%. Games above the threshold were classified as LOVANDE, while games below it were classified as REKOMMENDERAS INTE.
 
 ### M5 - Preprocessing Pipeline
 
