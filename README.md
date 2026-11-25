@@ -71,7 +71,7 @@ The five-fold cross-validation results were:
 
 The M5 recommendation threshold was selected on the validation set, with a target review capacity of approximately 10%.
 
-Final evaluation on the held-out test set:
+Final evaluation on the test set:
 
 | Metric | Result |
 |---|---:|
@@ -81,7 +81,74 @@ Final evaluation on the held-out test set:
 | F1-score | 0.415 |
 | Recommended games | 1,908 of 19,506 |
 
-The M5 pipeline is selected for further development because it performed better than the M4 baseline in cross-validation and on the test evaluation.
+The M5 pipeline was selected for further development because it performed better than the M4 baseline in cross-validation and in the test evaluation.
+
+### M6 - Model Comparison and Selection
+
+M6 compared different classification models using the preprocessing pipeline developed in M5. Logistic Regression, Decision Tree and Random Forest were evaluated using five-fold stratified cross-validation.
+
+The initial comparison showed that Logistic Regression performed best. Further experiments tested different regularization values for Logistic Regression, with `C=0.1` giving the best average cross-validation F1-score.
+
+#### M6 Cross-validation Results
+
+| Model | Mean F1-score | Standard deviation |
+|---|---:|---:|
+| Logistic Regression | 0.558 | 0.005 |
+| Decision Tree | 0.489 | 0.009 |
+| Random Forest | 0.535 | 0.004 |
+
+Logistic Regression was selected as the final model because it achieved the highest mean F1-score during cross-validation.
+
+#### Recommendation Threshold
+
+The recommendation threshold was selected using validation data to reflect Pixel Harbor's review capacity of approximately 10%.
+
+The selected threshold was `0.7873`. It recommended 1,950 out of 19,506 validation games.
+
+| Metric | Result |
+|---|---:|
+| Threshold | 0.7873 |
+| Precision | 0.724 |
+| Recall | 0.287 |
+| F1-score | 0.411 |
+| Recommended games | 1,950 of 19,506 |
+
+This threshold prioritizes precision and keeps the number of recommended games close to the available review capacity, rather than maximizing the F1-score.
+
+#### Final Test Evaluation
+
+The selected Logistic Regression model was trained using the combined training and validation data and evaluated on the test set.
+
+| Metric | Result |
+|---|---:|
+| Accuracy | 0.796 |
+| Precision | 0.741 |
+| Recall | 0.301 |
+| F1-score | 0.428 |
+
+#### Future Games Evaluation
+
+An additional experiment tested how the model performed on newer games released in 2023 and 2024.
+
+The model was trained using games released up to 2022. A separate portion of the older data was used to select the recommendation threshold before evaluating the model on the newer games.
+
+| Metric | Result |
+|---|---:|
+| Threshold | 0.784 |
+| Accuracy | 0.775 |
+| Precision | 0.674 |
+| Recall | 0.188 |
+| F1-score | 0.294 |
+
+The results show that predicting hits for newer games is more challenging. The lower recall indicates that the model misses a larger proportion of hits in this future-data experiment.
+
+#### Saved Model
+
+The selected Logistic Regression model and its recommendation threshold are saved using Joblib:
+
+`models/steam_hit_model.joblib`
+
+The saved artifact contains the trained model, selected threshold and model configuration. It can be loaded later for use in the Streamlit application.
 
 ## Project Structure
 
@@ -90,7 +157,10 @@ The M5 pipeline is selected for further development because it performed better 
 - `notebooks/02_know_the_data.ipynb` - M2: Dataset exploration and data-quality checks.
 - `notebooks/03_regression_abdullan.ipynb` - M3: Regression and model development experiments.
 - `notebooks/04_classification_abdullan.ipynb` - M4: Classification models and evaluation.
-- `notebooks/05_pipeline_abdullan.ipynb` - M5: Feature preprocessing, pipeline, cross-validation and final evaluation.
+- `notebooks/05_pipeline_abdullan.ipynb` - M5: Feature preprocessing, pipeline, cross-validation and evaluation.
+- `notebooks/06_model_battle_abdullan.ipynb` - M6: Model comparison, threshold selection, future-data evaluation and model saving.
+- `notebooks/steam_preprocessing.py` - Reusable preprocessing functions used by the M5 and M6 pipelines.
+- `models/steam_hit_model.joblib` - Saved Logistic Regression model and recommendation threshold.
 
 The dataset files are not included in this repository. They should be placed in the `data/` folder locally.
 
@@ -108,11 +178,17 @@ The dataset files are not included in this repository. They should be placed in 
    - `data/train.parquet`
    - `data/validation.parquet`
    - `data/test.parquet`
-7. Run the milestone notebooks in order, using the same prepared data split.
+7. Keep `steam_preprocessing.py` in the `notebooks/` folder so that the M6 notebook can import the preprocessing functions.
+8. Run the milestone notebooks in order, using the same prepared data split.
+9. Run the M6 notebook to reproduce the model comparison and generate the saved model artifact in the `models/` folder.
 
 ## Limitations
 
 Some dataset fields, including current price and store descriptions, may have changed after a game was released. Although the project excludes clear post-release performance metrics and checks descriptions for potentially retrospective promotional wording, the dataset may still contain information that is not a perfect snapshot of each game's pre-release state.
+
+The test set was evaluated during both M5 and M6. Therefore, the M6 test result should be interpreted as part of the project's milestone development rather than a completely untouched first-time test evaluation.
+
+The future-data experiment provides an additional indication of how the model performs on newer games, but it does not guarantee how well it will predict the success of games that have not yet been released.
 
 The model predicts whether a game belongs to the top 25% of games by positive reviews within its release year. Its probability should therefore be interpreted as a model estimate based on the available dataset, not a guarantee of commercial success.
 
