@@ -98,20 +98,17 @@ The dataset files are not included in this repository. They should be placed in 
 
 1. Clone or download this repository.
 2. Set up a Python environment with Jupyter Notebook and the libraries used in the notebooks, including pandas, NumPy, scikit-learn, SciPy and PyArrow.
-3. Obtain the Steam Games Dataset and run `notebooks/00_prepare_data.ipynb` to prepare the data.
-4. Make sure the prepared training, validation and test files are available in the `data/` folder.
-5. Run the milestone notebooks in order, using the same prepared data split.
-6.The original dataset file should be placed at:
+3. Obtain the Steam Games Dataset.
+4. Place the original dataset file in the `data/` folder using this filename:
 
-- `data/train-00000-of-00001.parquet`
+   `data/train-00000-of-00001.parquet`
 
-Run `notebooks/00_prepare_data.ipynb` first to generate the prepared training, validation and test Parquet files.
-
-The M5 notebook expects the prepared Parquet files at:
-
-- `data/train.parquet`
-- `data/validation.parquet`
-- `data/test.parquet`
+5. Run `notebooks/00_prepare_data.ipynb` to generate the prepared training, validation and test Parquet files.
+6. Make sure the prepared files are available in the `data/` folder:
+   - `data/train.parquet`
+   - `data/validation.parquet`
+   - `data/test.parquet`
+7. Run the milestone notebooks in order, using the same prepared data split.
 
 ## Limitations
 
