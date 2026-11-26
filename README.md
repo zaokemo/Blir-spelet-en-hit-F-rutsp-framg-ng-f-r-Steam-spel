@@ -4,7 +4,7 @@
 
 The goal of this project is to build a machine learning model that predicts whether a Steam game will become a hit using information that can be available before the game is released.
 
-The project is developed as an individual course project for Pixel Harbor. The final goal is to create a Streamlit application where users can enter information about a planned game and receive a hit probability and recommendation.
+The project is developed as an individual course project for Pixel Harbor. The final goal is to create a Streamlit application where users can enter information about a planned game and receive a hit probability and recommendation, together with an estimate of positive reviews.
 
 **Dataset:** [Steam Games Dataset by FronkonGames](https://huggingface.co/datasets/FronkonGames/steam-games-dataset)
 
@@ -26,7 +26,7 @@ The data is divided into three sets:
 
 The split uses `random_state=42`. The same prepared split is reused throughout the modelling work.
 
-Post-release information such as review counts, positive and negative reviews, estimated owners, peak concurrent players and playtime is excluded from the model features to reduce data leakage.
+Post-release information such as review counts, positive and negative reviews, estimated owners, peak concurrent players and playtime is excluded from the classification model features to reduce data leakage.
 
 ## Milestone Progress
 
@@ -150,7 +150,118 @@ The selected Logistic Regression model and its recommendation threshold are save
 
 The saved artifact contains the trained model, selected threshold and model configuration. It can be loaded later for use in the Streamlit application.
 
+### M7 - Review Prediction Model Comparison
+
+M7 focused on predicting the number of positive reviews a Steam game could receive. The same seven features selected during M3 were reused:
+
+- `price`
+- `windows`
+- `mac`
+- `linux`
+- `required_age`
+- `categories_count`
+- `genres_count`
+
+The target variable was transformed using `np.log1p(positive)`.
+
+A shallow Decision Tree Regressor with a maximum depth of 3 was first trained to make the model's decision rules easier to understand. The tree showed how features such as category count, genre count, price and required age were used to make predictions.
+
+#### Hyperparameter Tuning
+
+RandomizedSearchCV was used to find suitable hyperparameters for the Decision Tree and Random Forest models. Both searches used five-fold cross-validation and R² scoring on the combined training and validation data.
+
+The best Decision Tree configuration was:
+
+- Maximum depth: 12
+- Minimum samples leaf: 26
+- Minimum samples split: 23
+
+Its best cross-validation R² score was `0.2691`.
+
+The best Random Forest configuration was:
+
+- Number of estimators: 100
+- Maximum depth: None
+- Maximum features: 0.7
+- Minimum samples leaf: 10
+- Minimum samples split: 12
+
+Its best cross-validation R² score was `0.2866`.
+
+#### Cross-validation Comparison
+
+Three regression models were compared using the same five-fold cross-validation setup and the same R² metric.
+
+| Model | Mean R² | Standard deviation |
+|---|---:|---:|
+| Linear Regression | 0.2141 | 0.0066 |
+| Decision Tree | 0.2691 | 0.0090 |
+| Random Forest | 0.2866 | 0.0090 |
+
+The Random Forest achieved the highest mean R² score and was selected as the winning model.
+
+#### Final Test Evaluation
+
+The selected Random Forest was trained using the combined training and validation data and evaluated on the test dataset.
+
+| Metric | M3 Linear Regression | M7 Random Forest |
+|---|---:|---:|
+| Test R² | 0.2179 | 0.2921 |
+| Test MAE | 1.7118 | 1.5767 |
+
+The Random Forest achieved a higher R² and a lower MAE than the original Linear Regression model from M3. This indicates an improvement in predicting the logarithm of positive reviews.
+
+The MAE is measured on the `log1p(positive)` scale, not directly in the number of reviews.
+
+#### Saved Review Prediction Model
+
+The winning Random Forest model was saved using Joblib:
+
+`models/reviews_model.joblib`
+
+The saved artifact contains the trained model, feature names, selected hyperparameters and evaluation results.
+
+The seven input features are also listed in:
+
+`src/features.py`
+
+The test MAE is recorded in:
+
+`app/app.py`
+
+as `REVIEWS_MAE = 1.5767` for future use in the Streamlit application.
+
 ## Project Structure
+
+The repository is organized as follows:
+
+```text
+.
+├── app/
+│   └── app.py
+├── data/
+│   └── (local dataset files, not included in Git)
+├── models/
+│   ├── reviews_model.joblib
+│   └── steam_hit_model.joblib
+├── notebooks/
+│   ├── 00_prepare_data.ipynb
+│   ├── 01_features_abdullan.ipynb
+│   ├── 02_know_the_data.ipynb
+│   ├── 03_regression_abdullan.ipynb
+│   ├── 04_classification_abdullan.ipynb
+│   ├── 05_pipeline_abdullan.ipynb
+│   ├── 06_model_battle_abdullan.ipynb
+│   ├── 07_regression_battle_abdullan.ipynb
+│   └── steam_preprocessing.py
+├── src/
+│   └── features.py
+├── .gitignore
+├── README.md
+└── requirements.txt
+```
+
+### Important Files
 
 - `notebooks/00_prepare_data.ipynb` - Dataset preparation and creation of the target variable and data splits.
 - `notebooks/01_features_abdullan.ipynb` - M1: Initial feature experiments and baseline model.
@@ -158,11 +269,13 @@ The saved artifact contains the trained model, selected threshold and model conf
 - `notebooks/03_regression_abdullan.ipynb` - M3: Regression and model development experiments.
 - `notebooks/04_classification_abdullan.ipynb` - M4: Classification models and evaluation.
 - `notebooks/05_pipeline_abdullan.ipynb` - M5: Feature preprocessing, pipeline, cross-validation and evaluation.
-- `notebooks/06_model_battle_abdullan.ipynb` - M6: Model comparison, threshold selection, future-data evaluation and model saving.
+- `notebooks/06_model_battle_abdullan.ipynb` - M6: Classification model comparison, threshold selection, future-data evaluation and model saving.
+- `notebooks/07_regression_battle_abdullan.ipynb` - M7: Regression model comparison, hyperparameter tuning, evaluation and model saving.
 - `notebooks/steam_preprocessing.py` - Reusable preprocessing functions used by the M5 and M6 pipelines.
-- `models/steam_hit_model.joblib` - Saved Logistic Regression model and recommendation threshold.
-
-The dataset files are not included in this repository. They should be placed in the `data/` folder locally.
+- `models/steam_hit_model.joblib` - Saved Logistic Regression classification model and recommendation threshold.
+- `models/reviews_model.joblib` - Saved Random Forest regression model for positive review predictions.
+- `src/features.py` - Feature names used by the positive review prediction model.
+- `app/app.py` - Application configuration, including the review prediction model's test MAE.
 
 ## How to Run
 
@@ -180,16 +293,21 @@ The dataset files are not included in this repository. They should be placed in 
    - `data/test.parquet`
 7. Keep `steam_preprocessing.py` in the `notebooks/` folder so that the M6 notebook can import the preprocessing functions.
 8. Run the milestone notebooks in order, using the same prepared data split.
-9. Run the M6 notebook to reproduce the model comparison and generate the saved model artifact in the `models/` folder.
+9. Run the M6 notebook to reproduce the classification model comparison and generate the saved classification model in the `models/` folder.
+10. Run the M7 notebook to reproduce the regression model comparison and generate the saved review prediction model in the `models/` folder.
+
+The dataset files are excluded from Git using `.gitignore` and must be obtained separately.
 
 ## Limitations
 
 Some dataset fields, including current price and store descriptions, may have changed after a game was released. Although the project excludes clear post-release performance metrics and checks descriptions for potentially retrospective promotional wording, the dataset may still contain information that is not a perfect snapshot of each game's pre-release state.
 
-The test set was evaluated during both M5 and M6. Therefore, the M6 test result should be interpreted as part of the project's milestone development rather than a completely untouched first-time test evaluation.
+The test set has been evaluated during multiple milestones, including M3, M5, M6 and M7. Therefore, later test results should be interpreted as part of the project's milestone development and model comparison rather than completely untouched first-time test evaluations.
 
-The future-data experiment provides an additional indication of how the model performs on newer games, but it does not guarantee how well it will predict the success of games that have not yet been released.
+The future-data experiment provides an additional indication of how the classification model performs on newer games, but it does not guarantee how well it will predict the success of games that have not yet been released.
 
-The model predicts whether a game belongs to the top 25% of games by positive reviews within its release year. Its probability should therefore be interpreted as a model estimate based on the available dataset, not a guarantee of commercial success.
+The classification model predicts whether a game belongs to the top 25% of games by positive reviews within its release year. Its probability should therefore be interpreted as a model estimate based on the available dataset, not a guarantee of commercial success.
 
-The Streamlit application and later milestones will extend this work.
+The review prediction model estimates positive reviews using the selected pre-release features. Its predictions are estimates and should not be treated as guaranteed review counts.
+
+The Streamlit application will bring the classification and review prediction models together in the next milestone.
