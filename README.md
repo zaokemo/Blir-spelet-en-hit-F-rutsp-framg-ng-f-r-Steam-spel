@@ -2,9 +2,9 @@
 
 ## Project Description
 
-The goal of this project is to build a machine learning model that predicts whether a Steam game will become a hit using information that can be available before the game is released.
+The goal of this project is to build machine learning models that predict whether a Steam game will become a hit using information that can be available before the game is released.
 
-The project is developed as an individual course project for Pixel Harbor. The final goal is to create a Streamlit application where users can enter information about a planned game and receive a hit probability and recommendation, together with an estimate of positive reviews.
+The project is developed as an individual course project for Pixel Harbor. The final solution includes a classification model that predicts the probability of a game becoming a hit and a regression model that estimates the number of positive reviews.
 
 **Dataset:** [Steam Games Dataset by FronkonGames](https://huggingface.co/datasets/FronkonGames/steam-games-dataset)
 
@@ -26,7 +26,7 @@ The data is divided into three sets:
 
 The split uses `random_state=42`. The same prepared split is reused throughout the modelling work.
 
-Post-release information such as review counts, positive and negative reviews, estimated owners, peak concurrent players and playtime is excluded from the classification model features to reduce data leakage.
+Post-release information such as review counts, positive and negative reviews, recommendations, estimated owners, peak concurrent players and playtime is excluded from the classification model features to reduce data leakage.
 
 ## Milestone Progress
 
@@ -126,6 +126,8 @@ The selected Logistic Regression model was trained using the combined training a
 | Recall | 0.301 |
 | F1-score | 0.428 |
 
+A majority-class baseline that always predicts non-hit would achieve approximately 74.6% accuracy on the same test set. The selected model achieved 79.6% accuracy and, unlike the majority-class baseline, identified some actual hit games.
+
 #### Future Games Evaluation
 
 An additional experiment tested how the model performed on newer games released in 2023 and 2024.
@@ -142,13 +144,13 @@ The model was trained using games released up to 2022. A separate portion of the
 
 The results show that predicting hits for newer games is more challenging. The lower recall indicates that the model misses a larger proportion of hits in this future-data experiment.
 
-#### Saved Model
+#### Saved Classification Model
 
 The selected Logistic Regression model and its recommendation threshold are saved using Joblib:
 
 `models/steam_hit_model.joblib`
 
-The saved artifact contains the trained model, selected threshold and model configuration. It can be loaded later for use in the Streamlit application.
+The saved artifact contains the trained model, selected threshold and model configuration. It is loaded by the final notebook for new-game predictions.
 
 ### M7 - Review Prediction Model Comparison
 
@@ -229,7 +231,47 @@ The test MAE is recorded in:
 
 `app/app.py`
 
-as `REVIEWS_MAE = 1.5767` for future use in the Streamlit application.
+as `REVIEWS_MAE = 1.5767` for use when displaying the model's prediction error information.
+
+### M8 - Final Notebook and Model Card
+
+M8 brought the classification and regression models together in a final notebook. The milestone also included documentation of the models in a separate model card.
+
+#### Final Notebook
+
+`notebooks/08_final.ipynb`
+
+The final notebook loads the two saved models:
+
+- Logistic Regression classification model from `models/steam_hit_model.joblib`.
+- Random Forest regression model from `models/reviews_model.joblib`.
+
+It allows a user to enter information about a new Steam game, including its price, supported operating systems, required age, release month, categories, genres and short description.
+
+The notebook then:
+
+1. Calculates the predicted probability that the game will become a hit.
+2. Compares that probability with the selected recommendation threshold.
+3. Displays either LOVANDE or REKOMMENDERAS INTE.
+4. Estimates the number of positive reviews using the regression model.
+5. Displays an approximate error-based range for the review estimate.
+
+The notebook was tested by restarting the Jupyter kernel and running all cells successfully.
+
+The displayed recommendation is intended to support further investigation, not to make a final business decision. The approximate review range is not a statistically guaranteed prediction interval.
+
+#### Model Card
+
+`MODEL_CARD.md`
+
+The model card documents:
+
+- The purpose and intended use of the models.
+- The dataset and training process.
+- The classification and regression model performance.
+- The limitations and ethical considerations.
+
+It also explains that the classification model has relatively low recall and that predictions should not be treated as guarantees of commercial success.
 
 ## Project Structure
 
@@ -253,10 +295,12 @@ The repository is organized as follows:
 │   ├── 05_pipeline_abdullan.ipynb
 │   ├── 06_model_battle_abdullan.ipynb
 │   ├── 07_regression_battle_abdullan.ipynb
+│   ├── 08_final.ipynb
 │   └── steam_preprocessing.py
 ├── src/
 │   └── features.py
 ├── .gitignore
+├── MODEL_CARD.md
 ├── README.md
 └── requirements.txt
 ```
@@ -271,16 +315,18 @@ The repository is organized as follows:
 - `notebooks/05_pipeline_abdullan.ipynb` - M5: Feature preprocessing, pipeline, cross-validation and evaluation.
 - `notebooks/06_model_battle_abdullan.ipynb` - M6: Classification model comparison, threshold selection, future-data evaluation and model saving.
 - `notebooks/07_regression_battle_abdullan.ipynb` - M7: Regression model comparison, hyperparameter tuning, evaluation and model saving.
-- `notebooks/steam_preprocessing.py` - Reusable preprocessing functions used by the M5 and M6 pipelines.
+- `notebooks/08_final.ipynb` - M8: Loads both saved models and predicts hit probability and positive reviews for a new game.
+- `notebooks/steam_preprocessing.py` - Reusable preprocessing functions used by the classification pipeline.
 - `models/steam_hit_model.joblib` - Saved Logistic Regression classification model and recommendation threshold.
 - `models/reviews_model.joblib` - Saved Random Forest regression model for positive review predictions.
 - `src/features.py` - Feature names used by the positive review prediction model.
-- `app/app.py` - Application configuration, including the review prediction model's test MAE.
+- `MODEL_CARD.md` - Documentation of model purpose, dataset, training, performance, limitations and ethical considerations.
+- `app/app.py` - Contains the review prediction model's test MAE configuration.
 
 ## How to Run
 
 1. Clone or download this repository.
-2. Set up a Python environment with Jupyter Notebook and the libraries used in the notebooks, including pandas, NumPy, scikit-learn, SciPy and PyArrow.
+2. Set up a Python environment with Jupyter Notebook and the libraries used in the notebooks, including pandas, NumPy, scikit-learn, SciPy, PyArrow and Joblib.
 3. Obtain the Steam Games Dataset.
 4. Place the original dataset file in the `data/` folder using this filename:
 
@@ -291,12 +337,13 @@ The repository is organized as follows:
    - `data/train.parquet`
    - `data/validation.parquet`
    - `data/test.parquet`
-7. Keep `steam_preprocessing.py` in the `notebooks/` folder so that the M6 notebook can import the preprocessing functions.
+7. Keep `steam_preprocessing.py` in the `notebooks/` folder so that the classification preprocessing functions can be imported.
 8. Run the milestone notebooks in order, using the same prepared data split.
 9. Run the M6 notebook to reproduce the classification model comparison and generate the saved classification model in the `models/` folder.
 10. Run the M7 notebook to reproduce the regression model comparison and generate the saved review prediction model in the `models/` folder.
+11. Run `notebooks/08_final.ipynb` to load both saved models and try predictions with a new Steam game.
 
-The dataset files are excluded from Git using `.gitignore` and must be obtained separately.
+The final notebook requires the saved model files to be present in the `models/` folder. The dataset files are excluded from Git using `.gitignore` and must be obtained separately.
 
 ## Limitations
 
@@ -310,4 +357,6 @@ The classification model predicts whether a game belongs to the top 25% of games
 
 The review prediction model estimates positive reviews using the selected pre-release features. Its predictions are estimates and should not be treated as guaranteed review counts.
 
-The Streamlit application will bring the classification and review prediction models together in the next milestone.
+The classification model has relatively low recall, meaning that it misses many games that eventually become hits. Pixel Harbor should therefore use the predictions as decision-support information rather than automatically rejecting games that receive a low score.
+
+The final solution consists of the two trained models, the final prediction notebook and the model card. It does not require a separate Streamlit application for the completed M8 milestone.
